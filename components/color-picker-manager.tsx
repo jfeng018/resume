@@ -52,6 +52,8 @@ export function ColorPickerProvider({ children }: { children: React.ReactNode })
           <div className="absolute inset-0 bg-black/50" />
           <div
             className="relative z-10"
+            role="dialog"
+            aria-modal="true"
             onMouseDown={(e) => e.stopPropagation()}
           >
             <ColorPicker

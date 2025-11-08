@@ -109,7 +109,8 @@ export function ToolbarProvider({ children }: { children: React.ReactNode }) {
         target.closest('.rich-text-toolbar') ||
         target.closest('.ProseMirror') ||
         target.closest('[role="dialog"]') || // Popover/Dialog
-        target.closest('[data-radix-popper-content-wrapper]') // Radix UI popovers
+        target.closest('[data-radix-popper-content-wrapper]') || // Radix UI popovers
+        target.closest('.color-picker-modal') // Color picker modal
       ) {
         return
       }

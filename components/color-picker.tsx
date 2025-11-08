@@ -212,7 +212,7 @@ export default function ColorPicker({ initialColor, onSave, onCancel }: ColorPic
   const hueColor = `hsl(${hue}, 100%, 50%)`
 
   return (
-    <div className="bg-white p-3 rounded-lg w-[280px]">
+    <div className="bg-white p-3 rounded-lg w-[280px]" onMouseDown={(e) => e.stopPropagation()}>
       <div className="flex gap-2">
         {/* 左侧：饱和度/亮度选择器 */}
         <div

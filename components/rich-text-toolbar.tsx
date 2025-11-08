@@ -48,10 +48,21 @@ export default function RichTextToolbar({ editor }: RichTextToolbarProps) {
   const { openColorPicker } = useColorPicker()
   const savedSelectionRef = useRef<{ from: number; to: number } | null>(null)
 
-  // Save selection when toolbar is shown
+  // Save selection when toolbar is shown and update it whenever selection changes
   useEffect(() => {
-    const { from, to } = editor.state.selection
-    savedSelectionRef.current = { from, to }
+    const updateSelection = () => {
+      const { from, to } = editor.state.selection
+      if (from !== to) {
+        savedSelectionRef.current = { from, to }
+      }
+    }
+
+    updateSelection()
+    editor.on('selectionUpdate', updateSelection)
+
+    return () => {
+      editor.off('selectionUpdate', updateSelection)
+    }
   }, [editor])
 
   // Toggle list
@@ -295,12 +306,12 @@ export default function RichTextToolbar({ editor }: RichTextToolbarProps) {
               variant="ghost"
               className="h-6 w-6 p-0 hover:bg-slate-100 relative"
               title="文字颜色"
-              onMouseDown={(e) => {
+              onPointerDown={(e) => {
                 e.preventDefault()
-              }}
-              onClick={() => {
                 const { from, to } = editor.state.selection
                 savedSelectionRef.current = { from, to }
+              }}
+              onClick={() => {
                 setColorPickerOpen(true)
               }}
             >
@@ -325,12 +336,14 @@ export default function RichTextToolbar({ editor }: RichTextToolbarProps) {
                   key={color}
                   className="w-6 h-6 rounded border border-gray-300 hover:border-blue-500 transition-colors"
                   style={{ backgroundColor: color }}
-                  onMouseDown={(e) => {
+                  onPointerDown={(e) => {
                     e.preventDefault()
                   }}
                   onClick={() => {
-                    applyColorWithSelection(color)
-                    setColorPickerOpen(false)
+                    requestAnimationFrame(() => {
+                      applyColorWithSelection(color)
+                      setColorPickerOpen(false)
+                    })
                   }}
                   title={color}
                 />
@@ -339,18 +352,23 @@ export default function RichTextToolbar({ editor }: RichTextToolbarProps) {
               <button
                 className="w-6 h-6 rounded border border-gray-300 hover:border-blue-500 transition-colors cursor-pointer flex items-center justify-center bg-white"
                 title="自定义颜色"
-                onMouseDown={(e) => {
+                onPointerDown={(e) => {
                   e.preventDefault()
+                  // Save current selection before opening color picker
+                  const { from, to } = editor.state.selection
+                  savedSelectionRef.current = { from, to }
                 }}
                 onClick={(e) => {
                   e.preventDefault()
                   e.stopPropagation()
                   setColorPickerOpen(false)
-                  setTimeout(() => {
+                  requestAnimationFrame(() => {
                     openColorPicker(getCurrentColor(), (color) => {
-                      applyColorWithSelection(color)
+                      requestAnimationFrame(() => {
+                        applyColorWithSelection(color)
+                      })
                     })
-                  }, 100)
+                  })
                 }}
               >
                 <Icon icon="mdi:palette" className="w-4 h-4 text-slate-600" />
