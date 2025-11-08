@@ -36,9 +36,22 @@ export default function RichTextInput({ element, onChange, placeholder, showBord
 
       // 计算工具栏位置
       const rect = range.getBoundingClientRect()
+      const toolbarWidth = 300 // 工具栏最小宽度
+      let left = rect.left + rect.width / 2 - toolbarWidth / 2
+
+      // 防止超出左边界
+      if (left < 10) {
+        left = 10
+      }
+
+      // 防止超出右边界
+      if (left + toolbarWidth > window.innerWidth - 10) {
+        left = window.innerWidth - toolbarWidth - 10
+      }
+
       setToolbarPosition({
         top: rect.top - 120,
-        left: rect.left + rect.width / 2 - 300,
+        left: left,
       })
 
       // 获取选中文字的样式
