@@ -55,16 +55,15 @@ export default function ResumePreview({ resumeData }: ResumePreviewProps) {
           {(resumeData.personalInfoSection?.layout?.mode === 'inline' ||
             (resumeData.personalInfoSection?.layout?.mode === undefined && (resumeData.personalInfoSection as any)?.personalInfoInline)) ? (
             /* 单行显示模式（inline） */
-            <div className="personal-info flex flex-wrap items-center gap-x-4 gap-y-2">
-              {resumeData.personalInfoSection?.personalInfo.map((item, index) => (
+            <div className="personal-info flex items-center justify-between w-full whitespace-nowrap">
+              {resumeData.personalInfoSection?.personalInfo.map((item) => (
                 <div
                   key={item.id}
-                  className="personal-info-item flex items-center gap-1"
+                  className="personal-info-item flex items-center gap-1 shrink-0"
                 >
-                  {index > 0 && <span className="text-muted-foreground"></span>}
                   {item.icon && (
                     <svg
-                      className="resume-icon w-4 h-4 flex-shrink-0 transform -translate-y-[-1px]"
+                      className="resume-icon w-4 h-4 -translate-y-[1px] shrink-0"
                       fill="black"
                       width={16}
                       height={16}
@@ -73,9 +72,7 @@ export default function ResumePreview({ resumeData }: ResumePreviewProps) {
                     />
                   )}
                   {resumeData.personalInfoSection?.showPersonalInfoLabels !== false && (
-                    <span className="text-sm text-muted-foreground">
-                      {item.label}:
-                    </span>
+                    <span className="text-sm text-muted-foreground">{item.label}:</span>
                   )}
                   {item.value.type === "link" && item.value.content ? (
                     <a
@@ -87,9 +84,7 @@ export default function ResumePreview({ resumeData }: ResumePreviewProps) {
                       {item.value.title || "点击访问"}
                     </a>
                   ) : (
-                    <span className="text-sm text-foreground">
-                      {item.value.content || "未填写"}
-                    </span>
+                    <span className="text-sm text-foreground">{item.value.content || "未填写"}</span>
                   )}
                 </div>
               ))}
@@ -100,9 +95,9 @@ export default function ResumePreview({ resumeData }: ResumePreviewProps) {
               className="personal-info"
               style={{
                 display: 'grid',
-                gridTemplateColumns: `repeat(${resumeData.personalInfoSection?.layout?.itemsPerRow || 2}, auto)`,
+                gridTemplateColumns: `repeat(${resumeData.personalInfoSection?.layout?.itemsPerRow || 2}, minmax(0, 1fr))`,
                 gap: '0.5rem 1rem',
-                justifyContent: 'start',
+                justifyItems: 'start',
                 alignItems: 'center'
               }}
             >

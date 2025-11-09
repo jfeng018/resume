@@ -72,13 +72,40 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginBottom: 20,
   },
+  headerCentered: {
+    flexDirection: "column",
+    alignItems: "center",
+    marginBottom: 20,
+  },
   headerContent: {
     flex: 1,
+  },
+  headerContentCentered: {
+    width: "100%",
   },
   title: {
     fontSize: 18,
     fontWeight: "bold",
     marginBottom: 10,
+    textAlign: "left",
+  },
+  titleCentered: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 10,
+    textAlign: "center",
+  },
+  jobIntention: {
+    fontSize: 10,
+    color: "#666",
+    marginBottom: 8,
+    textAlign: "left",
+  },
+  jobIntentionCentered: {
+    fontSize: 10,
+    color: "#666",
+    marginBottom: 8,
+    textAlign: "center",
   },
   personalInfo: {
     flexDirection: "row",
@@ -93,13 +120,14 @@ const styles = StyleSheet.create({
   personalInfoInline: {
     flexDirection: "row",
     alignItems: "center",
-    flexWrap: "wrap",
+    justifyContent: "space-between",
+    width: "100%",
+    flexWrap: "nowrap",
   },
   personalInfoInlineItem: {
     flexDirection: "row",
     alignItems: "center",
-    marginRight: 15,
-    marginBottom: 3,
+    flexShrink: 0,
   },
   personalInfoSeparator: {
     marginRight: 8,
@@ -118,6 +146,12 @@ const styles = StyleSheet.create({
     height: 60,
     borderRadius: 30,
     marginLeft: 15,
+  },
+  avatarCentered: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    marginTop: 10,
   },
   moduleContainer: {
     marginBottom: 15,
@@ -316,38 +350,67 @@ const ResumePDF = ({ resumeData }: { resumeData: ResumeData }) => {
   const itemsPerRow = personalInfoSection?.layout?.itemsPerRow || 2;
   const showLabels = personalInfoSection?.showPersonalInfoLabels !== false;
   const personalInfoItems = personalInfoSection?.personalInfo || [];
+  const centerTitle = resumeData.centerTitle || false;
+
+  // 格式化求职意向显示
+  const formatJobIntention = () => {
+    if (!resumeData.jobIntentionSection?.enabled || !resumeData.jobIntentionSection?.items?.length) {
+      return null;
+    }
+
+    const items = resumeData.jobIntentionSection.items
+      .filter(item => {
+        // 过滤掉空值的项
+        if (item.type === 'salary') {
+          return item.salaryRange?.min !== undefined || item.salaryRange?.max !== undefined;
+        }
+        return item.value && item.value.trim() !== '';
+      })
+      .sort((a, b) => a.order - b.order)
+      .map(item => `${item.label}：${item.value}`)
+      .join(' ｜ ');
+
+    return items || null;
+  };
+
+  const jobIntentionText = formatJobIntention();
 
   return (
     <Document>
       <Page size="A4" style={styles.page}>
         {/* 头部信息 */}
-        <View style={styles.header}>
-          <View style={styles.headerContent}>
-            <Text style={styles.title}>{resumeData.title || "简历标题"}</Text>
+        <View style={centerTitle ? styles.headerCentered : styles.header}>
+          <View style={centerTitle ? styles.headerContentCentered : styles.headerContent}>
+            <Text style={centerTitle ? styles.titleCentered : styles.title}>
+              {resumeData.title || "简历标题"}
+            </Text>
+
+            {/* 求职意向 */}
+            {jobIntentionText && (
+              <Text style={centerTitle ? styles.jobIntentionCentered : styles.jobIntention}>
+                {jobIntentionText}
+              </Text>
+            )}
 
             {/* 个人信息 */}
             {isInline ? (
-              // 单行显示模式
-              <View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap" }}>
-                {personalInfoItems.map((item, index) => (
-                  <View key={item.id} style={{ flexDirection: "row", alignItems: "center" }}>
+              // 单行显示模式 - 使用两端对齐
+              <View style={styles.personalInfoInline}>
+                {personalInfoItems.map((item) => (
+                  <View key={item.id} style={styles.personalInfoInlineItem}>
                     {renderPersonalInfoItem(item, showLabels, true)}
-                    {index < personalInfoItems.length - 1 && (
-                      <Text style={styles.personalInfoSeparator}> • </Text>
-                    )}
                   </View>
                 ))}
               </View>
             ) : (
-              // 多行显示模式 - 使用动态itemsPerRow
-              <View style={{ flexDirection: "row", flexWrap: "wrap", width: "100%" }}>
+              // 多行显示模式 - 使用等宽列布局
+              <View style={styles.personalInfo}>
                 {personalInfoItems.map((item) => (
                   <View
                     key={item.id}
                     style={{
                       width: `${100 / itemsPerRow}%`,
-                      marginBottom: 5,
-                      paddingRight: 10
+                      marginBottom: 5
                     }}
                   >
                     {renderPersonalInfoItem(item, showLabels, false)}
@@ -359,7 +422,7 @@ const ResumePDF = ({ resumeData }: { resumeData: ResumeData }) => {
 
           {/* 头像 */}
           {resumeData.avatar && (
-            <Image src={resumeData.avatar} style={styles.avatar} />
+            <Image src={resumeData.avatar} style={centerTitle ? styles.avatarCentered : styles.avatar} />
           )}
         </View>
 

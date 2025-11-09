@@ -16,8 +16,7 @@ import ResumePreview from "./resume-preview"
 import PersonalInfoEditor from "./personal-info-editor"
 import JobIntentionEditor from "./job-intention-editor"
 import ModuleEditor from "./module-editor"
-import PDFExportButton from "./pdf-export-button"
-import ImageExportButton from "./image-export-button"
+import ExportButton from "./export-button"
 
 type ViewMode = "both" | "edit-only" | "preview-only"
 
@@ -231,12 +230,7 @@ export default function ResumeBuilder() {
             保存
           </Button>
 
-          <ImageExportButton
-            resumeData={editorState.resumeData}
-            size="sm"
-          />
-
-          <PDFExportButton
+          <ExportButton
             resumeData={editorState.resumeData}
             size="sm"
           />

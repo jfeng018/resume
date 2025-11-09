@@ -13,19 +13,17 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 
-interface ImageExportButtonProps {
+interface ExportButtonProps {
   resumeData: ResumeData;
   variant?: "default" | "outline";
   size?: "default" | "sm";
 }
 
-
-
-export function ImageExportButton({
+export function ExportButton({
   resumeData,
   variant = "default",
   size = "default",
-}: ImageExportButtonProps) {
+}: ExportButtonProps) {
   const [isExporting, setIsExporting] = useState(false);
   const { toast } = useToast();
 
@@ -133,6 +131,33 @@ export function ImageExportButton({
     }
   };
 
+  const exportAsPDF = () => {
+    const childWindow = window.open('/pdf-preview', '_blank');
+    if (!childWindow) {
+      console.error('Failed to open popup window');
+      toast({
+        title: "导出失败",
+        description: "无法打开PDF预览窗口，请检查浏览器弹窗设置",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const handleMessage = (event: MessageEvent) => {
+      if (event.source === childWindow && event.data.type === 'ready') {
+        childWindow.postMessage({ type: 'resumeData', data: resumeData }, '*');
+        window.removeEventListener('message', handleMessage);
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+
+    // 设置超时，如果子窗口没有准备好
+    setTimeout(() => {
+      window.removeEventListener('message', handleMessage);
+    }, 5000); // 5秒超时
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -140,13 +165,17 @@ export function ImageExportButton({
           variant={variant}
           size={size}
           disabled={isExporting}
-          className="gap-2 bg-blue-600 hover:bg-blue-700 text-white"
+          className="gap-2 bg-green-600 hover:bg-green-700 text-white"
         >
-          <Icon icon="mdi:image-outline" className="w-4 h-4" />
-          {isExporting ? "导出中..." : "导出图片"}
+          <Icon icon="mdi:download" className="w-4 h-4" />
+          {isExporting ? "导出中..." : "导出"}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
+        <DropdownMenuItem onClick={exportAsPDF}>
+          <Icon icon="mdi:file-pdf-box" className="w-4 h-4 mr-2" />
+          PDF 格式
+        </DropdownMenuItem>
         <DropdownMenuItem onClick={() => exportAsImage("png")}>
           <Icon icon="mdi:file-image" className="w-4 h-4 mr-2" />
           PNG 格式
@@ -168,4 +197,4 @@ export function ImageExportButton({
   );
 }
 
-export default ImageExportButton;
+export default ExportButton;
