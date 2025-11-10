@@ -68,40 +68,64 @@ export default function RichTextToolbar({ editor }: RichTextToolbarProps) {
     }
   }, [editor])
 
-  // Toggle list
-  const toggleList = (type: 'bulletList' | 'orderedList') => {
-    const wasActive = editor.isActive(type)
-
-    if (type === 'bulletList') {
-      editor.chain().focus().toggleBulletList().run()
-    } else {
-      editor.chain().focus().toggleOrderedList().run()
+  // 恢复保存的选区（防止点击工具栏导致选区丢失）
+  const restoreSavedSelection = () => {
+    if (savedSelectionRef.current) {
+      const { from, to } = savedSelectionRef.current
+      editor.chain().focus().setTextSelection({ from, to }).run()
+      return true
     }
+    editor.chain().focus().run()
+    return false
+  }
 
-    // 如果刚激活列表（之前不是列表），将光标移到最后一个列表项的末尾
-    if (!wasActive) {
-      setTimeout(() => {
-        const { state } = editor
-        const { doc } = state
+  // 将选区中的 hardBreak 拆分为独立段落，方便列表/对齐仅作用于所选行
+  const splitSelectionByHardBreak = () => {
+    const { state } = editor
+    const { from, to } = state.selection
+    const positions: number[] = []
 
-        // 找到文档中最后一个列表项
-        let lastListItemPos = -1
-        doc.descendants((node, pos) => {
-          if (node.type.name === 'listItem') {
-            lastListItemPos = pos
-          }
-        })
-
-        if (lastListItemPos !== -1) {
-          // 找到该列表项的末尾位置
-          const $pos = doc.resolve(lastListItemPos)
-          const listItemNode = $pos.nodeAfter
-          if (listItemNode) {
-            const endPos = lastListItemPos + listItemNode.nodeSize - 1
-            editor.commands.setTextSelection(endPos)
-          }
+    // 收集与当前选区相交的段落中的所有 hardBreak
+    state.doc.descendants((node, pos) => {
+      if (node.type?.name === 'paragraph') {
+        const start = pos + 1
+        const end = pos + node.nodeSize - 1
+        const overlaps = !(end < from || start > to)
+        if (overlaps) {
+          node.descendants((child, childOffset) => {
+            if (child.type?.name === 'hardBreak') {
+              positions.push(start + childOffset)
+            }
+          })
         }
-      }, 0)
+      }
+    })
+
+    if (!positions.length) return
+    // 逆序处理，避免位置偏移
+    positions.sort((a, b) => b - a).forEach((pos) => {
+      editor
+        .chain()
+        .setTextSelection({ from: pos, to: pos })
+        .splitBlock()
+        .run()
+    })
+    // 大致还原选区范围
+    editor.chain().setTextSelection({ from, to: Math.min(editor.state.doc.content.size - 1, to + positions.length) }).run()
+  }
+
+  // Toggle list，仅对所选行生效
+  const toggleList = (type: 'bulletList' | 'orderedList') => {
+    restoreSavedSelection()
+    splitSelectionByHardBreak()
+    const wasActive = editor.isActive(type)
+    const chain = editor.chain().focus()
+    if (type === 'bulletList') chain.toggleBulletList(); else chain.toggleOrderedList()
+    chain.run()
+    // 保持光标在当前选择末尾，避免跳到文档末尾
+    if (!wasActive && savedSelectionRef.current) {
+      const { to } = savedSelectionRef.current
+      editor.commands.setTextSelection(to)
     }
   }
 
@@ -117,6 +141,19 @@ export default function RichTextToolbar({ editor }: RichTextToolbarProps) {
     } else {
       editor.chain().focus().setColor(color).run()
     }
+  }
+
+  // Clear formatting for current selection only
+  const clearFormatting = () => {
+    restoreSavedSelection()
+    splitSelectionByHardBreak()
+    const chain = editor.chain().focus()
+    chain.unsetAllMarks()
+    // @ts-ignore provided by TextAlign extension
+    chain.unsetTextAlign?.()
+    chain.clearNodes()
+    chain.setParagraph()
+    chain.run()
   }
 
   // Get current font family
@@ -332,8 +369,8 @@ export default function RichTextToolbar({ editor }: RichTextToolbarProps) {
           size="sm"
           variant={editor.isActive({ textAlign: 'left' }) ? "default" : "ghost"}
           className={`h-6 w-6 p-0 ${editor.isActive({ textAlign: 'left' }) ? "bg-slate-300" : "hover:bg-slate-100"}`}
-          onMouseDown={(e) => e.preventDefault()}
-          onClick={() => editor.chain().focus().setTextAlign('left').run()}
+          onMouseDown={(e) => { e.preventDefault(); const { from, to } = editor.state.selection; savedSelectionRef.current = { from, to } }}
+          onClick={() => { restoreSavedSelection(); splitSelectionByHardBreak(); editor.chain().focus().setTextAlign('left').run() }}
           title="左对齐"
         >
           <Icon icon="mdi:format-align-left" className="w-3 h-3" />
@@ -343,8 +380,8 @@ export default function RichTextToolbar({ editor }: RichTextToolbarProps) {
           size="sm"
           variant={editor.isActive({ textAlign: 'center' }) ? "default" : "ghost"}
           className={`h-6 w-6 p-0 ${editor.isActive({ textAlign: 'center' }) ? "bg-slate-300" : "hover:bg-slate-100"}`}
-          onMouseDown={(e) => e.preventDefault()}
-          onClick={() => editor.chain().focus().setTextAlign('center').run()}
+          onMouseDown={(e) => { e.preventDefault(); const { from, to } = editor.state.selection; savedSelectionRef.current = { from, to } }}
+          onClick={() => { restoreSavedSelection(); splitSelectionByHardBreak(); editor.chain().focus().setTextAlign('center').run() }}
           title="居中对齐"
         >
           <Icon icon="mdi:format-align-center" className="w-3 h-3" />
@@ -354,8 +391,8 @@ export default function RichTextToolbar({ editor }: RichTextToolbarProps) {
           size="sm"
           variant={editor.isActive({ textAlign: 'right' }) ? "default" : "ghost"}
           className={`h-6 w-6 p-0 ${editor.isActive({ textAlign: 'right' }) ? "bg-slate-300" : "hover:bg-slate-100"}`}
-          onMouseDown={(e) => e.preventDefault()}
-          onClick={() => editor.chain().focus().setTextAlign('right').run()}
+          onMouseDown={(e) => { e.preventDefault(); const { from, to } = editor.state.selection; savedSelectionRef.current = { from, to } }}
+          onClick={() => { restoreSavedSelection(); splitSelectionByHardBreak(); editor.chain().focus().setTextAlign('right').run() }}
           title="右对齐"
         >
           <Icon icon="mdi:format-align-right" className="w-3 h-3" />
@@ -365,8 +402,8 @@ export default function RichTextToolbar({ editor }: RichTextToolbarProps) {
           size="sm"
           variant={editor.isActive({ textAlign: 'justify' }) ? "default" : "ghost"}
           className={`h-6 w-6 p-0 ${editor.isActive({ textAlign: 'justify' }) ? "bg-slate-300" : "hover:bg-slate-100"}`}
-          onMouseDown={(e) => e.preventDefault()}
-          onClick={() => editor.chain().focus().setTextAlign('justify').run()}
+          onMouseDown={(e) => { e.preventDefault(); const { from, to } = editor.state.selection; savedSelectionRef.current = { from, to } }}
+          onClick={() => { restoreSavedSelection(); splitSelectionByHardBreak(); editor.chain().focus().setTextAlign('justify').run() }}
           title="两端对齐"
         >
           <Icon icon="mdi:format-align-justify" className="w-3 h-3" />
@@ -379,7 +416,7 @@ export default function RichTextToolbar({ editor }: RichTextToolbarProps) {
           size="sm"
           variant={editor.isActive('bulletList') ? "default" : "ghost"}
           className={`h-6 w-6 p-0 ${editor.isActive('bulletList') ? "bg-slate-300" : "hover:bg-slate-100"}`}
-          onMouseDown={(e) => e.preventDefault()}
+          onMouseDown={(e) => { e.preventDefault(); const { from, to } = editor.state.selection; savedSelectionRef.current = { from, to } }}
           onClick={() => toggleList('bulletList')}
           title="无序列表"
         >
@@ -391,7 +428,7 @@ export default function RichTextToolbar({ editor }: RichTextToolbarProps) {
           size="sm"
           variant={editor.isActive('orderedList') ? "default" : "ghost"}
           className={`h-6 w-6 p-0 ${editor.isActive('orderedList') ? "bg-slate-300" : "hover:bg-slate-100"}`}
-          onMouseDown={(e) => e.preventDefault()}
+          onMouseDown={(e) => { e.preventDefault(); const { from, to } = editor.state.selection; savedSelectionRef.current = { from, to } }}
           onClick={() => toggleList('orderedList')}
           title="有序列表"
         >
@@ -478,6 +515,18 @@ export default function RichTextToolbar({ editor }: RichTextToolbarProps) {
             </div>
           </PopoverContent>
         </Popover>
+        <div className="w-px h-4 bg-slate-300 mx-0.5" />
+        {/* Clear formatting */}
+        <Button
+          size="sm"
+          variant="ghost"
+          className="h-6 w-6 p-0 hover:bg-slate-100"
+          title="清除格式"
+          onMouseDown={(e) => { e.preventDefault(); const { from, to } = editor.state.selection; savedSelectionRef.current = { from, to } }}
+          onClick={clearFormatting}
+        >
+          <Icon icon="mdi:format-clear" className="w-3 h-3" />
+        </Button>
       </div>
     </div>
   )
