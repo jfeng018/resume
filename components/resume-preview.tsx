@@ -236,7 +236,7 @@ export default function ResumePreview({ resumeData }: ResumePreviewProps) {
                   .sort((a, b) => a.order - b.order)
                   .map((row) => (
                     row.type === 'tags' ? (
-                      <div key={row.id} className="flex flex-wrap gap-1 items-center">
+                      <div key={row.id} className="flex flex-wrap gap-1 items-center mb-1">
                         {(row.tags || []).slice(0, 20).map((tag, idx) => (
                           <span key={`${row.id}-tag-${idx}`} className="inline-flex items-center border border-gray-300 rounded-full px-2 py-0.5 text-xs text-gray-600">
                             {tag}

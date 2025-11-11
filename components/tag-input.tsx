@@ -47,7 +47,7 @@ export default function TagInput({ value, onChange, placeholder = "输入标签�
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-1 p-2">
+    <div className="flex flex-wrap items-center gap-1 p-2 mb-1">
       {value.map(tag => (
         <span
           key={tag}
