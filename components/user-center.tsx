@@ -241,18 +241,20 @@ export default function UserCenter() {
             <TableHeader>
               <TableRow>
                 <TableHead className="w-10"></TableHead>
-                <TableHead>编号</TableHead>
-                <TableHead>头像</TableHead>
+                <TableHead className="text-center">编号</TableHead>
+                <TableHead className="text-center">头像</TableHead>
                 <TableHead>
-                  <div className="flex items-center">名称 <SortArrows field="name" /></div>
+                  <div className="flex items-center justify-start">名称 <SortArrows field="name" /></div>
                 </TableHead>
-                <TableHead>
-                  <div className="flex items-center">创建时间 <SortArrows field="createdAt" /></div>
+                <TableHead className="text-center">
+                  <div className="flex items-center justify-center">创建时间 <SortArrows field="createdAt" /></div>
                 </TableHead>
-                <TableHead>
-                  <div className="flex items-center">更新时间 <SortArrows field="updatedAt" /></div>
+                <TableHead className="text-center">
+                  <div className="flex items-center justify-center">更新时间 <SortArrows field="updatedAt" /></div>
                 </TableHead>
-                <TableHead className="text-center">操作</TableHead>
+                <TableHead className="text-center w-[360px]">
+                  <div className="flex items-center justify-center">操作</div>
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -266,12 +268,12 @@ export default function UserCenter() {
                       onChange={(e) => toggleSelect(it.id, e.target.checked)}
                     />
                   </TableCell>
-                  <TableCell className="text-xs text-muted-foreground">{it.id.slice(0, 8)}</TableCell>
-                  <TableCell>
-                    <div className="h-10 w-10 rounded-full overflow-hidden bg-muted flex items-center justify-center">
+                  <TableCell className="text-xs text-muted-foreground text-center">{it.id.slice(0, 8)}</TableCell>
+                  <TableCell className="text-center">
+                    <div className="h-10 w-10 rounded-full overflow-hidden bg-muted flex items-center justify-center mx-auto">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
-                        src={it.resumeData.avatar || "/default-avatar.jpg"}
+                        src={it.resumeData.avatar || "/not-set.png"}
                         alt={it.resumeData.title}
                         className="h-full w-full object-cover"
                         onError={(ev) => { (ev.currentTarget as HTMLImageElement).src = "/default-avatar.jpg" }}
@@ -279,9 +281,9 @@ export default function UserCenter() {
                     </div>
                   </TableCell>
                   <TableCell className="font-medium">{it.resumeData.title || "未命名"}</TableCell>
-                  <TableCell className="text-xs">{new Date(it.createdAt).toLocaleString()}</TableCell>
-                  <TableCell className="text-xs">{new Date(it.updatedAt).toLocaleString()}</TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-xs text-center">{new Date(it.createdAt).toLocaleString()}</TableCell>
+                  <TableCell className="text-xs text-center">{new Date(it.updatedAt).toLocaleString()}</TableCell>
+                  <TableCell className="text-right w-[360px]">
                     <div className="flex items-center gap-2 justify-end">
                       <Button variant="ghost" className="gap-2" onClick={() => router.push(`/view/${it.id}`)}>
                         <Icon icon="mdi:eye" className="w-4 h-4" /> 查看
