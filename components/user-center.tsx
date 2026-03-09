@@ -240,26 +240,35 @@ export default function UserCenter() {
                 <Icon icon="mdi:file-document-edit" className="h-8 w-8 text-primary" />
               </div>
               <h3 className="text-xl font-semibold">暂无简历</h3>
-              <p className="mt-2 text-sm text-muted-foreground">点击“创建简历”开始，或从 JSON 文件导入</p>
-              <div className="mt-6 flex items-center justify-center gap-3">
-                <Button onClick={handleCreate} className="gap-2">
-                  <Icon icon="mdi:plus" className="w-4 h-4" /> 创建简历
-                </Button>
-                <Button
-                  variant="outline"
-                  className="gap-2"
-                  onClick={() => document.getElementById("uc-import-file")?.click()}
-                  disabled={importing}
-                >
-                  <Icon icon="mdi:import" className="w-4 h-4" /> 导入
-                </Button>
-                <Button
-                  variant="outline"
-                  className="gap-2"
-                  onClick={() => prefetchAndOpenNew("example")}
-                >
-                  <Icon icon="mdi:lightbulb-on" className="w-4 h-4" /> 示例
-                </Button>
+              <div className="mt-2 inline-flex flex-col items-stretch">
+                <p className="text-sm text-muted-foreground">点击“创建简历”开始，或从 JSON 文件导入已有数据并继续编辑</p>
+                <div className="mt-6 flex items-center justify-between">
+                  <Button onClick={handleCreate} className="gap-2 shrink-0">
+                    <Icon icon="mdi:plus" className="w-4 h-4" /> 创建简历
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="gap-2 shrink-0"
+                    onClick={() => document.getElementById("uc-import-file")?.click()}
+                    disabled={importing}
+                  >
+                    <Icon icon="mdi:import" className="w-4 h-4" /> 导入
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="gap-2 shrink-0"
+                    onClick={() => prefetchAndOpenNew("example")}
+                  >
+                    <Icon icon="mdi:lightbulb-on" className="w-4 h-4" /> 示例
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="gap-2 shrink-0"
+                    onClick={() => window.open("https://github.com/wzdnzd/resume", "_blank", "noopener,noreferrer")}
+                  >
+                    <Icon icon="mdi:github" className="w-4 h-4" /> GitHub
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
